@@ -10,8 +10,7 @@ import numpy as np
 from ast import literal_eval
 from pprint import pprint, pformat
 
-save_path = '/media/bigdata/projects/ocr_database/data'
-df_path = os.path.join(save_path, 'doc_df.csv')
+df_path = 'doc_df.csv'
 
 if os.path.exists(df_path):
     df = pd.read_csv(df_path)
