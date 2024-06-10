@@ -4,47 +4,64 @@ Given uploaded documents, perform OCR and save the extracted text to a database.
 import os
 import pandas as pd
 import streamlit as st
+import subprocess
+import time
 
-df_path = 'doc_df.csv'
+try:
+  df_path = 'doc_df.csv'
 
-if os.path.exists(df_path):
-    df = pd.read_csv(df_path)
+  if os.path.exists(df_path):
+      df = pd.read_csv(df_path)
 
-if any(df.OCR_attempted == False):
+  if any(df.OCR_attempted == False):
 
-    OCR_false = df[df.OCR_attempted == False]
+      OCR_false = df[df.OCR_attempted == False]
 
-    if len(OCR_false) == 0:
-        st.write("All documents have been OCR'd.")
-    else:
-        st.write("Documents that need OCR:")
-        st.write(OCR_false)
+      if len(OCR_false) == 0:
+          st.write("All documents have been OCR'd.")
+      else:
+          st.write("Documents that need OCR:")
+          st.write(OCR_false)
 
-    from doctr.models import ocr_predictor
-    from doctr.io import DocumentFile
-    import os
-    from tqdm import tqdm
+      from doctr.models import ocr_predictor
+      from doctr.io import DocumentFile
+      import os
+      from tqdm import tqdm
 
-    def get_bag_of_words(json_output):
-      pages = json_output['pages']
-      bag_of_words = []
-      for this_page in pages:
-        for this_block in this_page['blocks']:
-          for this_line in this_block['lines']:
-            bag_of_words.extend([x['value'] for x in this_line['words']])
-      return bag_of_words
+      def get_bag_of_words(json_output):
+        pages = json_output['pages']
+        bag_of_words = []
+        for this_page in pages:
+          for this_block in this_page['blocks']:
+            for this_line in this_block['lines']:
+              bag_of_words.extend([x['value'] for x in this_line['words']])
+        return bag_of_words
 
-    model = ocr_predictor(pretrained=True)
+      model = ocr_predictor(pretrained=True)
 
-    for i, this_row in OCR_false.iterrows():
-      pdf_doc = DocumentFile.from_pdf(this_row['file_path'])
-      file_name = os.path.basename(this_row['file_path']) 
-      result = model(pdf_doc)
-      json_output = result.export()
-      bag_of_words = get_bag_of_words(json_output)
-      df.at[i, 'words'] = bag_of_words
-      df.at[i, 'OCR_attempted'] = True
-      st.write(f"OCR completed for {file_name}")
-      st.write(f"{i}/{len(OCR_false)} completed")
+      for i, this_row in OCR_false.iterrows():
+        pdf_doc = DocumentFile.from_pdf(this_row['file_path'])
+        file_name = os.path.basename(this_row['file_path']) 
+        result = model(pdf_doc)
+        json_output = result.export()
+        bag_of_words = get_bag_of_words(json_output)
+        df.at[i, 'words'] = bag_of_words
+        df.at[i, 'OCR_attempted'] = True
+        st.write(f"OCR completed for {file_name}")
+        st.write(f"{i}/{len(OCR_false)} completed")
 
-      df.to_csv(df_path, index=False)
+        df.to_csv(df_path, index=False)
+except Exception as e:
+  st.write(e)
+  sleep_time = 100
+  st.write("Error in OCR process")
+  st.write(f"Install opencv headless and wait for {sleep_time} seconds")
+  p = subprocess.Popen(
+      "pip uninstall opencv-python -y; pip install opencv-python-headless",
+      stdout=subprocess.PIPE,
+      shell=True
+  )
+  (output, err) = p.communicate()
+  p_status = p.wait()
+  st.write(output)
+  print('Restart the page now and it should work')
