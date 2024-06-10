@@ -21,3 +21,6 @@ Backend:
 	    - By metadata
 	    - By content
 	- Return path to saved scan
+
+Notes:
+    - To fix opencv issue, https://docs.streamlit.io/knowledge-base/dependencies/libgl
