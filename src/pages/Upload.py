@@ -5,12 +5,22 @@ import os
 import pandas as pd
 from datetime import datetime
 from PyPDF2 import PdfWriter, PdfReader
+import s3fs
 
-save_path = 'Data'
-if not os.path.exists(save_path):
-    os.makedirs(save_path)
+s3 = s3fs.S3FileSystem(
+        anon=False,
+        key = st.secrets["S3_KEY"], 
+        secret = st.secrets["S3_SECRET"] 
+        )
+base_path = 's3://ocr-database-s3'
 
-df_path = 'doc_df.csv'
+save_path = os.path.join(base_path, 'Data')
+# if not os.path.exists(save_path):
+#     os.makedirs(save_path)
+if not s3.exists(save_path):
+    s3.makedirs(save_path)
+
+df_path = os.path.join(base_path, 'doc_df.csv')
 
 with st.form(key='my_form'):
     st.write("Upload a file")
@@ -35,7 +45,13 @@ if submit_button:
         input_pdf = PdfReader(uploaded_file)
         st.write("Number of pages in the PDF:", len(input_pdf.pages))
 
+        p_bar = st.progress(0)
         for i, page in enumerate(input_pdf.pages):
+            
+            p_bar.progress((i+1)/len(input_pdf.pages),
+                           text=f"Uploading page {i+1}/{len(input_pdf.pages)}"
+                           )
+
             output = PdfWriter()
             output.add_page(page)
 
@@ -44,7 +60,9 @@ if submit_button:
                     uploaded_file.name.split('.')[0] + '_' + str(i) + '.pdf'
                     )
     
-            with open(save_page_path, 'wb') as f:
+            # with open(save_page_path, 'wb') as f:
+            #     output.write(f)
+            with s3.open(save_page_path, 'wb') as f:
                 output.write(f)
 
             time_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -63,9 +81,22 @@ if submit_button:
                         }
                     )
 
-            if os.path.exists(df_path):
-                df = pd.read_csv(df_path)
-                df = pd.concat([df, temp_df], ignore_index=True)
-                df.to_csv(df_path, index=False)
+            # if os.path.exists(df_path):
+            #     df = pd.read_csv(df_path)
+            #     df = pd.concat([df, temp_df], ignore_index=True)
+            #     df.to_csv(df_path, index=False)
+            # else:
+            #     temp_df.to_csv(df_path, index=False)
+
+            if s3.exists(df_path): 
+                with s3.open(df_path, 'rb') as f:
+                    df = pd.read_csv(f)
+                    # df = pd.read_csv(df_path)
+                    df = pd.concat([df, temp_df], ignore_index=True)
+                with s3.open(df_path, 'wb') as f:
+                    df.to_csv(f, index=False)
             else:
-                temp_df.to_csv(df_path, index=False)
+                with s3.open(df_path, 'wb') as f:
+                    temp_df.to_csv(f, index=False)
+
+st.write("Uploaded Completed")

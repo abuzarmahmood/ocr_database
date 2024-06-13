@@ -8,14 +8,30 @@ import streamlit as st
 from thefuzz import fuzz, process
 import numpy as np
 from ast import literal_eval
+import s3fs
 
-df_path = 'doc_df.csv'
+s3 = s3fs.S3FileSystem(
+        anon=False,
+        key = st.secrets["S3_KEY"], 
+        secret = st.secrets["S3_SECRET"] 
+        )
+base_path = 's3://ocr-database-s3'
 
-if os.path.exists(df_path):
-    df = pd.read_csv(df_path)
-    st.write("Document database loaded successfully.")
+# df_path = 'doc_df.csv'
+df_path = os.path.join(base_path, 'doc_df.csv')
+
+# if os.path.exists(df_path):
+#     df = pd.read_csv(df_path)
+#     st.write("Document database loaded successfully.")
+# else:
+#     st.write("No documents uploaded yet.")
+
+if s3.exists(df_path): 
+  with s3.open(df_path, 'rb') as f:
+      df = pd.read_csv(f)
+  st.write("Document database loaded successfully.")
 else:
-    st.write("No documents uploaded yet.")
+    st.write("No OCR'd documents found.")
 
 with st.form(key='my_form'):
     st.write("Search for a word or phrase")
