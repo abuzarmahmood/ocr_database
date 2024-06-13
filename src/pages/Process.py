@@ -50,12 +50,8 @@ if s3.exists(df_path):
 
       p_bar = st.progress(0)
 
-      for i, this_row in OCR_false.iterrows():
+      for counter, (i, this_row) in enumerate(OCR_false.iterrows()):
         
-        p_bar.progress((i+1)/len(OCR_false),
-                       text=f"OCR'ing {i+1}/{len(OCR_false)}"
-                       )
-
         pdf_content = s3.open(this_row['file_path'], 'rb').read()
         pdf_doc = DocumentFile.from_pdf(pdf_content)
         # pdf_doc = DocumentFile.from_pdf(this_row['file_path'])
@@ -71,5 +67,14 @@ if s3.exists(df_path):
         # df.to_csv(df_path, index=False)
         with s3.open(df_path, 'wb') as f:
             df.to_csv(f, index=False)
+
+        p_bar.progress((counter+1)/len(OCR_false),
+                       text=f"OCR'ing {counter+1}/{len(OCR_false)}"
+                       )
+      st.write("All documents have been OCR'd.")
+
+  else:
+    st.write("All documents have been OCR'd.\n" +\
+        "No more documents to process.")
 else:
   st.write("No documents uploaded yet.")

@@ -99,4 +99,4 @@ if submit_button:
                 with s3.open(df_path, 'wb') as f:
                     temp_df.to_csv(f, index=False)
 
-st.write("Uploaded Completed")
+st.write("Upload Completed")
