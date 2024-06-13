@@ -8,15 +8,30 @@ import streamlit as st
 from thefuzz import fuzz, process
 import numpy as np
 from ast import literal_eval
-from pprint import pprint, pformat
+import s3fs
 
-df_path = 'doc_df.csv'
+s3 = s3fs.S3FileSystem(
+        anon=False,
+        key = st.secrets["S3_KEY"], 
+        secret = st.secrets["S3_SECRET"] 
+        )
+base_path = 's3://ocr-database-s3'
 
-if os.path.exists(df_path):
-    df = pd.read_csv(df_path)
-    st.write("Document database loaded successfully.")
+# df_path = 'doc_df.csv'
+df_path = os.path.join(base_path, 'doc_df.csv')
+
+# if os.path.exists(df_path):
+#     df = pd.read_csv(df_path)
+#     st.write("Document database loaded successfully.")
+# else:
+#     st.write("No documents uploaded yet.")
+
+if s3.exists(df_path): 
+  with s3.open(df_path, 'rb') as f:
+      df = pd.read_csv(f)
+  st.write("Document database loaded successfully.")
 else:
-    st.write("No documents uploaded yet.")
+    st.write("No OCR'd documents found.")
 
 with st.form(key='my_form'):
     st.write("Search for a word or phrase")
@@ -38,6 +53,7 @@ if submit_button:
   n = 5
   top_n_indices = np.argsort(search_results)[-n:][::-1]
   st.write("Top search results:")
+  print_list = []
   for idx in top_n_indices:
     word_list = literal_eval(df.iloc[idx]['words'])
     extracted_words = process.extract(
@@ -48,9 +64,12 @@ if submit_button:
         'file_name': basename,
         'file_type': df.iloc[idx]['file_type'],
         'notes': df.iloc[idx]['notes'],
-        'words': extracted_words
+        'words': str(extracted_words)
         }
-    print_str = pformat(print_dict) 
-    st.write(print_str)
-    # print_df = pd.DataFrame(print_dict, index=[0])
-    # st.write(print_df)
+    print_list.append(print_dict)
+    # print_str = pformat(print_dict) 
+    # st.write(print_str)
+  print_df = pd.DataFrame(print_list)
+  print(print_df)
+  # st.write(print_list)
+  st.write(print_df)
