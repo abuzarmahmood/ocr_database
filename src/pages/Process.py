@@ -46,7 +46,7 @@ if s3.exists(df_path):
               bag_of_words.extend([x['value'] for x in this_line['words']])
         return bag_of_words
 
-      model = ocr_predictor(pretrained=True)
+      model = ocr_predictor(pretrained=True, detect_orientation=True)
 
       p_bar = st.progress(0)
 
