@@ -9,6 +9,7 @@ from thefuzz import fuzz, process
 import numpy as np
 from ast import literal_eval
 import s3fs
+from streamlit_pdf_viewer import pdf_viewer
 
 s3 = s3fs.S3FileSystem(
         anon=False,
@@ -16,6 +17,7 @@ s3 = s3fs.S3FileSystem(
         secret = st.secrets["S3_SECRET"] 
         )
 base_path = 's3://ocr-database-s3'
+data_path = os.path.join(base_path, 'Data')
 
 # df_path = 'doc_df.csv'
 df_path = os.path.join(base_path, 'doc_df.csv')
@@ -26,6 +28,10 @@ df_path = os.path.join(base_path, 'doc_df.csv')
 # else:
 #     st.write("No documents uploaded yet.")
 
+############################################################
+# Search
+############################################################
+
 if s3.exists(df_path): 
   with s3.open(df_path, 'rb') as f:
       df = pd.read_csv(f)
@@ -33,7 +39,7 @@ if s3.exists(df_path):
 else:
     st.write("No OCR'd documents found.")
 
-with st.form(key='my_form'):
+with st.form(key='search_form'):
     st.write("Search for a word or phrase")
     search_term = st.text_input("Search term", "")
     submit_button = st.form_submit_button(label='Submit')
@@ -73,3 +79,47 @@ if submit_button:
   print(print_df)
   # st.write(print_list)
   st.write(print_df)
+
+############################################################
+# Viewer
+############################################################
+
+with st.form(key='view_form'):
+    st.write("Enter filename for file to view")
+    filename = st.text_input("Filename", "")
+    submit_button = st.form_submit_button(label='Submit')
+
+
+if submit_button:
+  fin_path = os.path.join(data_path, filename)
+  if s3.exists(fin_path): 
+    pdf_content = s3.open(fin_path, 'rb').read()
+    pdf_viewer(pdf_content)
+    st.write("File loaded successfully.")
+  else:
+      st.write("File not found.")
+
+############################################################
+# Downloader
+############################################################
+
+with st.form(key='Download form'):
+    st.write("Enter filename for file to download")
+    filename = st.text_input("Filename", "")
+    submit_button = st.form_submit_button(label='Submit')
+
+
+if submit_button:
+  fin_path = os.path.join(data_path, filename)
+  if s3.exists(fin_path): 
+    pdf_content = s3.open(fin_path, 'rb').read()
+    st.download_button(
+        label="Download file",
+        data=pdf_content,
+        file_name=filename,
+        # mime='application/pdf'
+        )
+    st.write("File loaded successfully.")
+  else:
+      st.write("File not found.")
+

@@ -7,3 +7,4 @@ PyPDF2==3.0.1
 thefuzz==0.22.1
 numpy==1.26.4
 s3fs
+streamlit-pdf-viewer
