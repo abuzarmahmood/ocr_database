@@ -7,11 +7,11 @@ Operate on Pareto principle (something better than nothing).
 https://github.com/abuzarmahmood/ocr_database/assets/12436309/b6551e7f-1fbb-4c66-bbb4-c4078e98dba2
 
 
-
 # Searching
 
 
-https://github.com/abuzarmahmood/ocr_database/assets/12436309/13c44802-c8b8-485b-9b30-070aec4e734f
+https://github.com/abuzarmahmood/ocr_database/assets/12436309/affa042e-5030-4c96-9bb7-98351f4f1a06
+
 
 
 
