@@ -1,5 +1,6 @@
 Database to allow search of scanned documents.<br>
-Operate on Pareto principle (something better than nothing).
+Operate on Pareto principle (20% effort, 80% results).
+A detailed discussion of the app can be found [HERE](https://medium.com/@abuzar_mahmood/let-ai-do-the-work-a-k-a-rapid-deployment-using-streamlit-apps-0d290aa6908d).
 
 # Accessing
 
