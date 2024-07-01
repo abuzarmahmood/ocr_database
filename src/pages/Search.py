@@ -16,7 +16,8 @@ s3 = s3fs.S3FileSystem(
         key = st.secrets["S3_KEY"], 
         secret = st.secrets["S3_SECRET"] 
         )
-base_path = 's3://ocr-database-s3'
+# base_path = 's3://ocr-database-s3'
+base_path = f's3://{st.secrets["S3_BUCKET_NAME"]}'
 data_path = os.path.join(base_path, 'Data')
 
 # df_path = 'doc_df.csv'
