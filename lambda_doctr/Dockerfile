@@ -17,8 +17,11 @@ RUN yum update && yum install -y \
 # Copy everything else from the current directory to the container 
 COPY . ${LAMBDA_TASK_ROOT} 
 
+ENV DOCTR_CACHE_DIR=/tmp
+ENV DOCTR_MULTIPROCESSING_DISABLE=1
+
 # Run initial_test.py
 RUN python initial_test.py
 
 # Set the CMD to your handler (could also be done as a parameter override outside of the Dockerfile)
-CMD [ "lambda_function.handler" ]
+CMD [ "lambda_function.lambda_handler" ]
