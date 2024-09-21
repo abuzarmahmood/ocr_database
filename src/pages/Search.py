@@ -20,14 +20,43 @@ s3 = s3fs.S3FileSystem(
 base_path = f's3://{st.secrets["S3_BUCKET_NAME"]}'
 data_path = os.path.join(base_path, 'Data')
 
-# df_path = 'doc_df.csv'
 df_path = os.path.join(base_path, 'doc_df.csv')
 
-# if os.path.exists(df_path):
-#     df = pd.read_csv(df_path)
-#     st.write("Document database loaded successfully.")
-# else:
-#     st.write("No documents uploaded yet.")
+############################################################
+# Process 
+############################################################
+# If any jsons in s3://Processed, load them into the dataframe
+# and remove them from the s3 bucket
+processed_path = os.path.join(base_path, 'Processed')
+
+if s3.exists(df_path):
+  with s3.open(df_path, 'rb') as f:
+      df = pd.read_csv(f)
+
+  if s3.exists(processed_path):
+    processed_files = s3.ls(processed_path)
+    if len(processed_files) > 0:
+
+      p_bar = st.progress(0)
+      for file in :
+        if file.endswith('.json'):
+          with s3.open(file, 'rb') as f:
+            entry = pd.read_json(f)
+            entry_file_name = entry['file_name']
+            entry_file_path = os.path.join(base_path, entry_file_name)
+            entry_words = entry['bag_of_words']
+            wanted_index = df[df['file_path'] == entry['file_path'].values[0]].index
+            df.at[wanted_index, 'words'] = entry_words
+            df.at[wanted_index, 'OCR_attempted'] = True
+            s3.rm(file)
+            p_bar.progress((i+1)/len(processed_files),
+                           text=f"Processed {i+1}/{len(processed_files)}"
+                           )
+      st.write("Processed files loaded successfully.")
+
+with s3.open(df_path, 'wb') as f:
+  df.to_csv(f, index=False)
+st.write("Document database updated successfully.")
 
 if s3.exists(df_path): 
   with s3.open(df_path, 'rb') as f:
