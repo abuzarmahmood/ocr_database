@@ -6,6 +6,17 @@ import pandas as pd
 from datetime import datetime
 from PyPDF2 import PdfWriter, PdfReader
 import s3fs
+import time
+
+def get_unique_filename(s3, path, filename):
+    """Generate a unique filename if a conflict is detected"""
+    base, ext = os.path.splitext(filename)
+    counter = 1
+    new_filename = filename
+    while s3.exists(os.path.join(path, new_filename)):
+        new_filename = f"{base}_{int(time.time())}_{counter}{ext}"
+        counter += 1
+    return new_filename
 
 s3 = s3fs.S3FileSystem(
         anon=False,
@@ -56,9 +67,10 @@ if submit_button:
             output = PdfWriter()
             output.add_page(page)
 
+            base_filename = get_unique_filename(s3, save_path, uploaded_file.name)
             save_page_path = os.path.join(
                     save_path,
-                    uploaded_file.name.split('.')[0] + '_' + str(i) + '.pdf'
+                    base_filename.split('.')[0] + '_' + str(i) + '.pdf'
                     )
     
             # with open(save_page_path, 'wb') as f:
