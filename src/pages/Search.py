@@ -29,12 +29,22 @@ df_path = os.path.join(base_path, 'doc_df.csv')
 # else:
 #     st.write("No documents uploaded yet.")
 
+# Add refresh button at the top
+if st.button('🔄 Refresh Document Database'):
+    if s3.exists(df_path):
+        with s3.open(df_path, 'rb') as f:
+            df = pd.read_csv(f)
+        st.success("✅ Document database refreshed successfully!")
+    else:
+        st.error("❌ No documents found in S3 storage.")
+        
+# Initial load of database
 if s3.exists(df_path): 
-  with s3.open(df_path, 'rb') as f:
-      df = pd.read_csv(f)
-  st.write("Document database loaded successfully.")
+    with s3.open(df_path, 'rb') as f:
+        df = pd.read_csv(f)
+    st.info("📚 Document database loaded successfully.")
 
-  ############################################################
+    ############################################################
   # Search
   ############################################################
 
