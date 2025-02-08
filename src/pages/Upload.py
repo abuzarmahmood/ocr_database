@@ -16,8 +16,6 @@ s3 = s3fs.S3FileSystem(
 base_path = f's3://{st.secrets["S3_BUCKET_NAME"]}'
 
 save_path = os.path.join(base_path, 'Data')
-# if not os.path.exists(save_path):
-#     os.makedirs(save_path)
 if not s3.exists(save_path):
     s3.makedirs(save_path)
 
@@ -82,17 +80,11 @@ if submit_button:
                         }
                     )
 
-            # if os.path.exists(df_path):
-            #     df = pd.read_csv(df_path)
-            #     df = pd.concat([df, temp_df], ignore_index=True)
-            #     df.to_csv(df_path, index=False)
-            # else:
-            #     temp_df.to_csv(df_path, index=False)
-
             if s3.exists(df_path): 
                 with s3.open(df_path, 'rb') as f:
                     df = pd.read_csv(f)
-                    # df = pd.read_csv(df_path)
+                    # Drop any rows with duplicate file_path
+                    df = df.drop_duplicates(subset='file_path', keep='first')
                     df = pd.concat([df, temp_df], ignore_index=True)
                 with s3.open(df_path, 'wb') as f:
                     df.to_csv(f, index=False)
